@@ -61,6 +61,7 @@
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.LevelAlertsCheck = new System.Windows.Forms.CheckBox();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -345,11 +346,25 @@
             this.checkBox1.UseVisualStyleBackColor = true;
             this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
+            // LevelAlertsCheck
+            // 
+            this.LevelAlertsCheck.AutoSize = true;
+            this.LevelAlertsCheck.Checked = true;
+            this.LevelAlertsCheck.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.LevelAlertsCheck.Location = new System.Drawing.Point(198, 42);
+            this.LevelAlertsCheck.Name = "LevelAlertsCheck";
+            this.LevelAlertsCheck.Size = new System.Drawing.Size(123, 21);
+            this.LevelAlertsCheck.TabIndex = 30;
+            this.LevelAlertsCheck.Text = "Level up alerts";
+            this.LevelAlertsCheck.UseVisualStyleBackColor = true;
+            this.LevelAlertsCheck.CheckedChanged += new System.EventHandler(this.LevelAlertsCheck_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1282, 652);
+            this.Controls.Add(this.LevelAlertsCheck);
             this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.label8);
@@ -423,6 +438,7 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.CheckBox LevelAlertsCheck;
     }
 }
 

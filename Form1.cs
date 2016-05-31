@@ -36,6 +36,7 @@ namespace TwitchChatForm
         List<User> ActiveUsers;
         bool JoinPart;
         bool verboseChat;
+        bool levelUpAlerts;
        
 
         public Form1()
@@ -55,6 +56,7 @@ namespace TwitchChatForm
             textBox2.Text = "Total users in db: " + db.Users.Count().ToString();
             QueueCount = new TextBox();
             verboseChat = true;
+            levelUpAlerts = true;
             //ActiveUsers.Add(user);
             //textBox1 = new TextBox();
 
@@ -68,7 +70,7 @@ namespace TwitchChatForm
 
             this.password = File.ReadAllText(@"oauth.txt", Encoding.UTF8);
 
-            this.channel = "PandaXGaming".ToLower();
+            this.channel = "sourkoolaidshow".ToLower();
             chatMessageKeyword = "PRIVMSG";
             chatJoinKeyword = "JOIN";
             chatPartKeyword = "PART";
@@ -137,10 +139,8 @@ namespace TwitchChatForm
                     var message = sendMessageQueue.Dequeue();
                     writer.WriteLine($"{chatMessagePrefix}{message}");
 
-                    if (verboseChat)
-                    {
-                        Chat.AppendText($"\r\n{message}");
-                    }
+                    Chat.AppendText($"\r\nexpansionteam: {message}\r\n");
+
                     //writer.Flush();
                     lastMessage = DateTime.Now;
                     QueueCount.Text = sendMessageQueue.Count.ToString();
@@ -159,11 +159,11 @@ namespace TwitchChatForm
                 JoinPart = false;
 
                 //Write to program window
-                if(verboseChat)
-                    Chat.AppendText($"\r\n" + message);
+                if (verboseChat)
+                    Chat.AppendText($"\r\n" + message + "\r\n");
 
                 //Check for ping, respond with pong
-                if(message.StartsWith("PING"))
+                if (message.StartsWith("PING"))
                 {
                     writer.WriteLine("PONG" + message.Substring(5) + "\r\n");
                 }
@@ -201,9 +201,12 @@ namespace TwitchChatForm
                         if (iBang > 0)
                         {
                             var speaker = command.Substring(0, iBang);
-                            var chatMessage = message.Substring(iColon + 1);
 
-                            ReceiveMessage(speaker, chatMessage);
+
+                            var chatMessage = message.Substring(iColon + 1);
+                            
+
+                            ReceiveMessage(speaker, chatMessage, message);
                         }
                     }
                 } //end iColon
@@ -269,9 +272,14 @@ namespace TwitchChatForm
         }
 
 
-        void ReceiveMessage(string speaker, string chatMessage)
+        void ReceiveMessage(string speaker, string chatMessage, string message)
         {
-            Chat.AppendText($"\r\n{speaker}: {chatMessage} \r\n");
+
+
+            if (!verboseChat)
+            {
+                Chat.AppendText($"\r\n{speaker}: {chatMessage}");
+            } 
            
 
             if (chatMessage.StartsWith("!hi"))
@@ -282,12 +290,28 @@ namespace TwitchChatForm
             if (chatMessage.StartsWith("!mystats"))
             {
                 User user = db.Users.First(n => n.UserName == speaker);
-                double timeUntilLevelUp = (user.NextLevel - user.LevelProgress).TotalMinutes;
-                double timeRounded = Math.Round(timeUntilLevelUp);
-                
-                var messageString = speaker + "'s stats:  Viewer level is " + user.ViewerLevel.ToString()
-                    + ".  You will level up after " + timeRounded.ToString() + " more minutes of viewing.";
+                //double timeUntilLevelUp = (user.NextLevel - user.Xp).TotalMinutes;
+                //double timeRounded = Math.Round(timeUntilLevelUp);
 
+                double nextLevelRounded = Math.Round((user.NextLevel).TotalMinutes);
+                double currentXPRounded = Math.Round((user.LevelProgress).TotalMinutes);
+                
+                var messageString = speaker + "'s stats:  SKS level " + user.ViewerLevel.ToString()
+                    + ".  XP " + currentXPRounded.ToString() + " / " + nextLevelRounded.ToString();
+
+                SendMessage(messageString);
+            }
+
+            if(chatMessage.StartsWith("!failwall"))
+            {
+                var messageString = "koolFAIL koolFAIL koolFAIL koolFAIL koolFAIL koolFAIL koolFAIL koolFAIL";
+                SendMessage(messageString);
+            
+            }
+
+            if(chatMessage.StartsWith("!wally"))
+            {
+                var messageString = "koolWALLY How's that ass feel??!!";
                 SendMessage(messageString);
             }
 
@@ -295,7 +319,7 @@ namespace TwitchChatForm
             {
 
 
-                var messageString = "*Hands " + speaker + " a bucket of extra crispy thighs.*";
+                var messageString = "*Hands " + speaker + " a bucket of extra crispy legs.*";
 
                 SendMessage(messageString);
             }
@@ -318,7 +342,7 @@ namespace TwitchChatForm
                 }
 
                 var messageString = "The user closest to leveling up is " + name + ", and they are "
-                    + howClose.ToString() + " minute(s) from leveling.";
+                    + howClose.ToString() + " XP from leveling.";
 
                 SendMessage(messageString);
 
@@ -343,9 +367,9 @@ namespace TwitchChatForm
             {
                 UserName = speaker,
                 LevelProgress = TimeSpan.FromMinutes(1),
-                Xp = 0,
-                ViewerLevel = 0,
-                NextLevel = TimeSpan.FromMinutes(30),
+                //Xp = 0,
+                ViewerLevel = 1,
+                NextLevel = TimeSpan.FromMinutes(15),
                 Latest = DateTime.Now,
 
             };
@@ -387,22 +411,25 @@ namespace TwitchChatForm
                 if(item.LevelProgress >= item.NextLevel)
                 {
                     item.ViewerLevel += 1;
-                    item.NextLevel += TimeSpan.FromMinutes(10);
-                    item.LevelProgress = TimeSpan.FromMinutes(0);
-                    sendMessageQueue.Enqueue(item.UserName + " has reached viewer level "
-                        + item.ViewerLevel.ToString() + "!");
+                    item.NextLevel += TimeSpan.FromMinutes(20 * (item.ViewerLevel * 1.1) );
+                    //item.Xp = TimeSpan.FromMinutes(0);
+                    if (levelUpAlerts)
+                    {
+                        sendMessageQueue.Enqueue(item.UserName + " has reached viewer level "
+                            + item.ViewerLevel.ToString() + "!");
+                    }
                 }
                 db.Entry(item).State = System.Data.Entity.EntityState.Modified;
             }
 
             db.SaveChanges();
             AppMessageBox.Text = "";
-            User Expandingman = db.Users.First(n => n.UserName == "Expandingman");
-            ExpandingmanName.Text = Expandingman.UserName;
-            ExpandingmanLatest.Text = Expandingman.Latest.ToString();
-            ExpandingmanLevel.Text = Expandingman.ViewerLevel.ToString();
-            ExpandingmanCurrent.Text = Expandingman.LevelProgress.ToString();
-            ExpandingmanNextLevel.Text = Expandingman.NextLevel.ToString();
+            //User Expandingman = db.Users.First(n => n.UserName == "Expandingman");
+            //ExpandingmanName.Text = Expandingman.UserName;
+            //ExpandingmanLatest.Text = Expandingman.Latest.ToString();
+            //ExpandingmanLevel.Text = Expandingman.ViewerLevel.ToString();
+            //ExpandingmanCurrent.Text = Expandingman.Xp.ToString();
+            //ExpandingmanNextLevel.Text = Expandingman.NextLevel.ToString();
 
             if (listBox1.SelectedItem == null)
             {
@@ -479,6 +506,18 @@ namespace TwitchChatForm
             } else
             {
                 verboseChat = false;
+            }
+        }
+
+        private void LevelAlertsCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            if (levelUpAlerts == false)
+            {
+                levelUpAlerts = true;
+            }
+            else
+            {
+                levelUpAlerts = false;
             }
         }
     }

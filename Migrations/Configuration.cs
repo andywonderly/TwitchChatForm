@@ -35,9 +35,11 @@ namespace TwitchChatForm.Migrations
                 db.Users.Add(new User
                 {
                     UserName = "Expandingman",
-                    LevelProgress = TimeSpan.FromMinutes(0),
+                    LevelProgress = TimeSpan.FromMinutes(29),
                     NextLevel = TimeSpan.FromMinutes(30),
-                    Xp = 0,
+                    Latest = DateTime.Now,
+                    Xp = 1,
+                    ViewerLevel = 1,
                 });
 
                 db.SaveChanges();
